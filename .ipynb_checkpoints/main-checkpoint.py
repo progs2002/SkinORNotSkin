@@ -1,9 +1,7 @@
 import numpy as np
 import plotter
 #import trainer
-from scipy.special import expit
 import sys
-import os
 
 def extract(filename):
     print("loading dataset")
@@ -41,25 +39,29 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def h2(x, weights):
-    return expit(np.dot(x,weights))
+    return sigmoid(np.dot(x,weights))
 
 def h(x, weights):
     matrix = (x @ weights)
     for i in range(matrix.shape[0]):
-        matrix[i] = expit(matrix[i])
+        matrix[i] = sigmoid(matrix[i])
     return matrix
 
 def cost_function(x, y, weights):
     m = y.shape[0]
-    cost1=0
-    cost2=0
-    for i in range(m):
-        if y[i] == 1:
-            cost1 += y[i] * np.log(h2(x[i,:], weights))
-        else:
-            cost2 += (1 - y[i]) * np.log(1 - h2(x[i,:], weights))
+    cost1 = y.T @ np.log(h(x, weights))
+    cost2 = (np.ones(m) - y.T) @ np.log(np.ones(m) - h(x, weights))
     return (-1/m * (cost1 + cost2))
 
+def improved_cost_fn(x, y, weights):
+    c = 0
+    m = y.shape[0]
+    for i in range(y.shape[0]):
+        if y[i] == 1:
+            c+= -np.log(h2(x[i,:],weights))
+        else:
+            c+= -np.log(1 - h2(x[i,:],weights))
+    return c/m
 
 def update_weights(x, y, weights, learning_rate):
     m = y.shape[0]
@@ -71,51 +73,28 @@ def train(x, y, weights, learning_rate, iter):
     for i in range(iter):
         print(i)
         weights = update_weights(x, y, weights, learning_rate)
-        #cost_history.append(cost_function(x, y, weights))
-    return weights
+        cost_history.append(improved_cost_fn(x, y, weights))
+    return weights, cost_history
 
 def classifier(features, weight):
-    prediction = expit(np.dot(features, weight))
+    prediction = sigmoid(np.dot(features, weight))
     if prediction >= 0.5:
         return True
     else:
         return False
 
-def train_init():
+if __name__ == "__main__":
     X, Y = prepare_trainer()
 
     w_temp = np.array([1,1,1,1])
 
     alpha = 0.3
-    iterations = 5000
 
-    weights = train(X, Y, w_temp, alpha, iterations)
+    weights, history = train(X, Y, w_temp, alpha, 20)
     print("training done")
     print("weights are ")
-    print(weights)
     np.savetxt('weights.txt',weights)
+    print("cost history")
+    print(history)
 
-def predict():
-    if os.path.exists('weights.txt') == False:
-        print("model has not been trained yet")
-        sys.exit(0)
-    w = np.loadtxt('weights.txt')
-    x = map(float,input().split())
-    x = list(x)
-    x.insert(0,1)
-    x = np.array(x)
-    if classifier(x,w):
-        print(x[1:4,].__str__(), 'is a valid skin color')
-    else:
-        print(x[1:4,].__str__(), 'is not a valid skin color')
-
-if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        if sys.argv[1] == 'train':
-            train_init()
-            print("model has been trained, the weights have been saved as weights.txt")
-        elif sys.argv[1] == 'predict':
-            predict()
-        else:
-            print("invlaid argument")
-
+    mat = h(X, w_temp)
