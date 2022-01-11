@@ -8,4 +8,5 @@ the dataset has been taken from
 link -> https://archive.ics.uci.edu/ml/datasets/Skin+Segmentation#
 
 check out the notebook or run the python file. 
+<br>
 required modules - numpy
