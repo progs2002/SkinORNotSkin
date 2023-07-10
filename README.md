@@ -9,4 +9,4 @@ link -> https://archive.ics.uci.edu/ml/datasets/Skin+Segmentation#
 
 check out the notebook or run the python file. 
 <br>
-required modules - pandas, sklearn, fastai
+required modules - pandas, sklearn, fastapi
